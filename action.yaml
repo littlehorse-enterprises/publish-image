@@ -16,6 +16,9 @@ inputs:
   github-token:
     description: Github secret secrets.GITHUB_TOKEN required only if registry is github
     default: ""
+  platforms:
+    description: Architecture platforms
+    default: "linux/amd64,linux/arm64"
   prefix:
     description: prefix to be appended to image tag ex brach-
     default: ""
@@ -94,7 +97,7 @@ runs:
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.dockerfile }}
-        platforms: linux/amd64,linux/arm64
+        platforms: ${{ inputs.platforms }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
