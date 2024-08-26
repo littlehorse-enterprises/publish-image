@@ -102,7 +102,7 @@ runs:
         push: false
         load: true
         tags: |
-          ${{ inputs.image-name }}:${{ inputs.prefix }}-trivy
+          ${{ inputs.image-name }}=${{ inputs.prefix }}-trivy
         # tags: ${{ steps.meta.outputs.tags }}
         # labels: ${{ steps.meta.outputs.labels }}
 
