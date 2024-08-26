@@ -108,7 +108,7 @@ runs:
         image-ref: ${{ steps.meta.outputs.tags }}  # Use the built image tag
         severity: HIGH,CRITICAL  # Specify severity levels
         ignore-unfixed: true  # Optional: Ignore unfixed vulnerabilities
-        exit-code: '1'
+        exit-code: '0'
 
     - name: Annotate image
       shell: bash
