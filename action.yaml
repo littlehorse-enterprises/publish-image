@@ -101,15 +101,14 @@ runs:
         platforms: ${{ inputs.platforms }}
         push: false
         load: true
-        tags: |
-          ${{ inputs.image-name }}=${{ inputs.prefix }}-trivy
+        tags: image-trivy:trivy
         # tags: ${{ steps.meta.outputs.tags }}
         # labels: ${{ steps.meta.outputs.labels }}
 
     - name: Scan Docker image
       uses: aquasecurity/trivy-action@0.20.0
       with:
-        image-ref: ${{ inputs.image-name }}:${{ inputs.prefix }}-trivy  # Use the built image tag
+        image-ref: image-trivy:trivy
         severity: HIGH,CRITICAL  # Specify severity levels
         ignore-unfixed: true  # Optional: Ignore unfixed vulnerabilities
         exit-code: '1'
