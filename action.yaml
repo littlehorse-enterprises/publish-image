@@ -20,7 +20,7 @@ inputs:
     description: Architecture platforms
     default: "linux/amd64,linux/arm64"
   prefix:
-    description: prefix to be appended to image tag ex branch-
+    description: prefix to be appended to image tag ex brach-
     default: ""
   tags:
     description: "tags strategy configuration. For more information see: https://github.com/docker/metadata-action?tab=readme-ov-file#tags-input"
@@ -94,22 +94,18 @@ runs:
 
     - name: Build Docker images
       uses: docker/build-push-action@v5
-      id: build
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.dockerfile }}
         platforms: ${{ inputs.platforms }}
-        push: false
-        load: true
-        tags: |
-          image-trivy=trivy
-        # tags: ${{ steps.meta.outputs.tags }}
-        # labels: ${{ steps.meta.outputs.labels }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
 
     - name: Scan Docker image
       uses: aquasecurity/trivy-action@0.20.0
       with:
-        image-ref: 'image-trivy:trivy'  # Use the built image tag
+        image-ref: ${{ steps.meta.outputs.tags }}  # Use the built image tag
         severity: HIGH,CRITICAL  # Specify severity levels
         ignore-unfixed: true  # Optional: Ignore unfixed vulnerabilities
         exit-code: '1'
