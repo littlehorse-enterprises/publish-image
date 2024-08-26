@@ -92,7 +92,7 @@ runs:
           prefix=${{ inputs.prefix }}
         tags: ${{ inputs.tags }}
 
-    - name: Build Docker images
+    - name: Build and push Docker images
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.context }}
@@ -101,7 +101,7 @@ runs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-
+        
     - name: Scan Docker image
       uses: aquasecurity/trivy-action@0.20.0
       with:
@@ -109,17 +109,6 @@ runs:
         severity: HIGH,CRITICAL  # Specify severity levels
         ignore-unfixed: true  # Optional: Ignore unfixed vulnerabilities
         exit-code: '1'
-          
-    - name: Push Docker images
-      uses: docker/build-push-action@v5
-      with:
-        context: ${{ inputs.context }}
-        file: ${{ inputs.dockerfile }}
-        platforms: ${{ inputs.platforms }}
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        load: true
 
     - name: Annotate image
       shell: bash
