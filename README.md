@@ -5,6 +5,7 @@ This actions is intended for publishing docker images either to a public registr
 ## Usage
 
 ### Workflow permissions
+
 This action requires special permission at workflow level
 
 #### Github
@@ -23,17 +24,18 @@ permisions:
   id-token: write
 ```
 
-
 ### Inputs
 
-|     input      | required | default value  | description                                                                                               |
-| :------------: | :------: | :------------: | :-------------------------------------------------------------------------------------------------------- |
-|  `image-name`  |  `true`  |      `""`      | The image name, in case of ECR it's the repository name                                                   |
-|   `context`    | `false`  |      `.`       | The context path for the docker build                                                                     |
-| `docker-file`  | `false`  | `./Dockerfile` | The path to the Dockerfile to build                                                                       |
-| `github-token` | `false`  |      `""`      | Required only when registry is `github`                                                                   |
-|   `registry`   | `false`  |    `github`    | The registry location. Either `github` or `ecr`                                                           |
-|    `prefix`    | `false`  |      `""`      | Prefix to be appended to the image tag, for example `branch-` will result on `<image-name>:branch-master` |
+|     input      | required | default value  | description                                                                                                                    |
+| :------------: | :------: | :------------: | :----------------------------------------------------------------------------------------------------------------------------- |
+|  `image-name`  |  `true`  |      `""`      | The image name, in case of ECR it's the repository name                                                                        |
+|   `context`    | `false`  |      `.`       | The context path for the docker build                                                                                          |
+| `docker-file`  | `false`  | `./Dockerfile` | The path to the Dockerfile to build                                                                                            |
+| `github-token` | `false`  |      `""`      | Required only when registry is `github`                                                                                        |
+|   `registry`   | `false`  |    `github`    | The registry location. Either `github` or `ecr`                                                                                |
+|    `prefix`    | `false`  |      `""`      | Prefix to be appended to the image tag, for example `branch-` will result on `<image-name>:branch-master`                      |
+|     `tags`     | `false`  |       ""       | tags strategy configuration. For more information see: https://github.com/docker/metadata-action?tab=readme-ov-file#tags-input |
+|  `build-args`  | `false`  |                | List of build-time variables                                                                                                   |
 
 ## Examples
 
@@ -68,4 +70,16 @@ permisions:
     image-name: <image-name>
     dockerfile: path/to/Dockerfile
     prefix: brach-
+```
+
+### Adding build-args
+
+```yaml
+- name: Build and publish
+  uses: ittlehorse-enterprises/publish-image@v1
+  with:
+    image-name: <image-name>
+    dockerfile: path/to/Dockerfile
+    build-args: |
+      VERSION=0.0.0
 ```
