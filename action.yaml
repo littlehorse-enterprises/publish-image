@@ -105,11 +105,16 @@ runs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: ${{ inputs.build-args }}
-        
+    
+    - name: Extract and export first tag
+      id: extract-tag
+      run: |
+        first_tag=$(echo ${{ steps.meta.outputs.tags }} | cut -d' ' -f1)
+        echo "FIRST_TAG=$first_tag" >> $GITHUB_OUTPUT
     - name: Scan Docker image
       uses: aquasecurity/trivy-action@0.24.0
       with:
-        image-ref: ${{ fromJSON(steps.meta.outputs.tags)[0] }}  # Use the built image tag
+        image-ref: ${{ env.FIRST_TAG }}  # Use the built image tag
         severity: HIGH,CRITICAL  # Specify severity levels
         ignore-unfixed: true  # Optional: Ignore unfixed vulnerabilities
         exit-code: '0'
