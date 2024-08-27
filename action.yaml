@@ -110,8 +110,8 @@ runs:
       id: extract-tag
       run: |
         first_tag=$(echo ${{ steps.meta.outputs.tags }} | cut -d' ' -f1)
-        echo "FIRST_TAG=$first_tag" >> $GITHUB_OUTPUT
-        
+        echo "FIRST_TAG=$first_tag" >> $GITHUB_ENV
+
     - name: Scan Docker image
       uses: aquasecurity/trivy-action@0.24.0
       with:
