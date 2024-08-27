@@ -25,6 +25,9 @@ inputs:
   tags:
     description: "tags strategy configuration. For more information see: https://github.com/docker/metadata-action?tab=readme-ov-file#tags-input"
     default: ""
+  build-args:
+    description: "List of build-time variables"
+    required: false
 
 runs:
   using: composite
@@ -101,6 +104,7 @@ runs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        build-args: ${{ inputs.build-args }}
         
     - name: Scan Docker image
       uses: aquasecurity/trivy-action@0.20.0
