@@ -108,6 +108,7 @@ runs:
     
     - name: Extract and export first tag
       id: extract-tag
+      shell: bash
       run: |
         first_tag=$(echo ${{ steps.meta.outputs.tags }} | cut -d' ' -f1)
         echo "FIRST_TAG=$first_tag" >> $GITHUB_ENV
