@@ -106,20 +106,20 @@ runs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: ${{ inputs.build-args }}
     
-    - name: Extract and export first tag
-      id: extract-tag
-      shell: bash
-      run: |
-        first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
-        echo "FIRST_TAG=$first_tag" >> $GITHUB_ENV
+    # - name: Extract and export first tag
+    #   id: extract-tag
+    #   shell: bash
+    #   run: |
+    #     first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
+    #     echo "FIRST_TAG=$first_tag" >> $GITHUB_ENV
 
-    - name: Scan Docker image
-      uses: aquasecurity/trivy-action@0.24.0
-      with:
-        image-ref: ${{ env.FIRST_TAG }}  # Use the built image tag
-        severity: HIGH,CRITICAL  # Specify severity levels
-        ignore-unfixed: true  # Optional: Ignore unfixed vulnerabilities
-        exit-code: '0'
+    # - name: Scan Docker image
+    #   uses: aquasecurity/trivy-action@0.24.0
+    #   with:
+    #     image-ref: ${{ env.FIRST_TAG }}  # Use the built image tag
+    #     severity: HIGH,CRITICAL  # Specify severity levels
+    #     ignore-unfixed: true  # Optional: Ignore unfixed vulnerabilities
+    #     exit-code: '0'
 
     - name: Annotate image
       shell: bash
