@@ -28,7 +28,10 @@ inputs:
   build-args:
     description: "List of build-time variables"
     required: false
-
+outputs:
+  tags:
+    description: Tags for the built image
+    value: ${{ steps.meta.outputs.tags }}
 runs:
   using: composite
   steps:
