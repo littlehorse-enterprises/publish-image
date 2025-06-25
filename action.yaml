@@ -11,7 +11,7 @@ inputs:
     description: Relative route of Dockerfile
     required: true
   registry:
-    description: Either github or ecr
+    description: Container registry github, ecr or quay
     default: github
   github-token:
     description: Github secret secrets.GITHUB_TOKEN required only if registry is github
@@ -28,6 +28,12 @@ inputs:
   build-args:
     description: "List of build-time variables"
     required: false
+  quay-username:
+    description: "Quay username"
+    default: "littlehorse+github"
+  quay-token:
+    description: "Quay token"
+    default: ""
 outputs:
   tags:
     description: Tags for the built image
@@ -37,9 +43,9 @@ runs:
   steps:
     - name: Registry not recognized
       shell: bash
-      if: ${{ inputs.registry != 'github' && inputs.registry != 'ecr' }}
+      if: ${{ inputs.registry != 'github' && inputs.registry != 'ecr' && inputs.registry != 'quay' }}
       run: |
-        echo "Registry not recognized, it should be github or ecr"
+        echo "Registry not recognized, it should be github, ecr or quay"
         exit 1
 
     - name: github-token is required
@@ -47,6 +53,13 @@ runs:
       if: ${{ inputs.registry == 'github' && inputs.github-token == '' }}
       run: |
         echo "github-token is required when registry is github"
+        exit 1
+
+    - name: quay-token is required
+      shell: bash
+      if: ${{ inputs.registry == 'quay' && inputs.quay-token == '' }}
+      run: |
+        echo "quay-token is required when registry is quay"
         exit 1
 
     - name: Set up QEMU
@@ -76,6 +89,14 @@ runs:
       if: ${{ inputs.registry == 'ecr' }}
       uses: aws-actions/amazon-ecr-login@v2
 
+    - name: Login to Quay.io
+      uses: docker/login-action@v3
+      if: ${{ inputs.registry == 'quay' }}
+      with:
+        registry: quay.io
+        username: ${{ inputs.quay-username }}
+        password: ${{ inputs.quay-token }}
+
     - name: Set DOCKER_IMAGE to github
       if: ${{ inputs.registry == 'github'}}
       shell: bash
@@ -87,6 +108,12 @@ runs:
       shell: bash
       run: |
         echo DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ inputs.image-name }} >> $GITHUB_ENV
+
+    - name: Set DOCKER_IMAGE to quay
+      if: ${{ inputs.registry == 'quay'}}
+      shell: bash
+      run: |
+        echo DOCKER_IMAGE=quay.io/littlehorse/${{ inputs.image-name }} >> $GITHUB_ENV
 
     - name: Extract metadata (tags, labels) for Docker
       uses: docker/metadata-action@v5
@@ -108,21 +135,6 @@ runs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: ${{ inputs.build-args }}
-    
-    # - name: Extract and export first tag
-    #   id: extract-tag
-    #   shell: bash
-    #   run: |
-    #     first_tag=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
-    #     echo "FIRST_TAG=$first_tag" >> $GITHUB_ENV
-
-    # - name: Scan Docker image
-    #   uses: aquasecurity/trivy-action@0.24.0
-    #   with:
-    #     image-ref: ${{ env.FIRST_TAG }}  # Use the built image tag
-    #     severity: HIGH,CRITICAL  # Specify severity levels
-    #     ignore-unfixed: true  # Optional: Ignore unfixed vulnerabilities
-    #     exit-code: '0'
 
     - name: Annotate image
       shell: bash
