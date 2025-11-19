@@ -34,6 +34,9 @@ inputs:
   quay-token:
     description: "Quay token"
     default: ""
+  ghcr-root:
+    description: "Either if use repo root or image name for images hosted in ghcr.io"
+    default: "false"
 outputs:
   tags:
     description: Tags for the built image
@@ -101,7 +104,11 @@ runs:
       if: ${{ inputs.registry == 'github'}}
       shell: bash
       run: |
+        if [ "${{ inputs.ghcr-root }}" = "true" ]; then
+          echo DOCKER_IMAGE=ghcr.io/${{ github.repository }} >> $GITHUB_ENV
+        else
         echo DOCKER_IMAGE=ghcr.io/${{ github.repository }}/${{ inputs.image-name }} >> $GITHUB_ENV
+        fi
 
     - name: Set DOCKER_IMAGE to ecr
       if: ${{ inputs.registry == 'ecr' }}
