@@ -105,7 +105,7 @@ runs:
       shell: bash
       run: |
         if [ "${{ inputs.ghcr-root }}" = "true" ]; then
-          echo DOCKER_IMAGE=ghcr.io/${{ github.repository }} >> $GITHUB_ENV
+          echo DOCKER_IMAGE=ghcr.io/littlehorse-enterprises/${{ inputs.image-name }} >> $GITHUB_ENV
         else
         echo DOCKER_IMAGE=ghcr.io/${{ github.repository }}/${{ inputs.image-name }} >> $GITHUB_ENV
         fi
