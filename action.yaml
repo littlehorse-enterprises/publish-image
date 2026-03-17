@@ -11,7 +11,7 @@ inputs:
     description: Relative route of Dockerfile
     required: true
   registry:
-    description: Container registry github, ecr or quay
+    description: Container registry github, ecr or quay, it now accepts comma separated values to support multiple registries, for example "github,ecr"
     default: github
   github-token:
     description: Github secret secrets.GITHUB_TOKEN required only if registry is github
@@ -46,42 +46,46 @@ runs:
   steps:
     - name: Registry not recognized
       shell: bash
-      if: ${{ inputs.registry != 'github' && inputs.registry != 'ecr' && inputs.registry != 'quay' }}
       run: |
-        echo "Registry not recognized, it should be github, ecr or quay"
-        exit 1
+        IFS=',' read -ra REGISTRIES <<< "${{ inputs.registry }}"
+        for reg in "${REGISTRIES[@]}"; do
+          if [[ "$reg" != "github" && "$reg" != "ecr" && "$reg" != "quay" ]]; then
+            echo "Registry '$reg' not recognized, it should be github, ecr or quay"
+            exit 1
+          fi
+        done
 
     - name: github-token is required
       shell: bash
-      if: ${{ inputs.registry == 'github' && inputs.github-token == '' }}
+      if: ${{ contains(inputs.registry, 'github') && inputs.github-token == '' }}
       run: |
         echo "github-token is required when registry is github"
         exit 1
 
     - name: quay-token is required
       shell: bash
-      if: ${{ inputs.registry == 'quay' && inputs.quay-token == '' }}
+      if: ${{ contains(inputs.registry, 'quay') && inputs.quay-token == '' }}
       run: |
         echo "quay-token is required when registry is quay"
         exit 1
 
     - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+      uses: docker/setup-qemu-action@v4
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      uses: docker/setup-buildx-action@v4
 
     - name: Log in to github registry
-      if: ${{ inputs.registry == 'github'}}
-      uses: docker/login-action@v3
+      if: ${{ contains(inputs.registry, 'github') }}
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ inputs.github-token }}
 
     - name: Configure AWS credentials
-      if: ${{ inputs.registry == 'ecr' }}
-      uses: aws-actions/configure-aws-credentials@v4
+      if: ${{ contains(inputs.registry, 'ecr') }}
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         role-to-assume: arn:aws:iam::637423582379:role/GithubActions-ECR
         role-session-name: gha-ecr
@@ -89,51 +93,53 @@ runs:
 
     - name: Login to Amazon ECR
       id: login-ecr
-      if: ${{ inputs.registry == 'ecr' }}
+      if: ${{ contains(inputs.registry, 'ecr') }}
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Login to Quay.io
-      uses: docker/login-action@v3
-      if: ${{ inputs.registry == 'quay' }}
+      uses: docker/login-action@v4
+      if: ${{ contains(inputs.registry, 'quay') }}
       with:
         registry: quay.io
         username: ${{ inputs.quay-username }}
         password: ${{ inputs.quay-token }}
 
-    - name: Set DOCKER_IMAGE to github
-      if: ${{ inputs.registry == 'github'}}
+    - name: Set DOCKER_IMAGE for github
+      if: ${{ contains(inputs.registry, 'github') }}
       shell: bash
       run: |
         if [ "${{ inputs.ghcr-root }}" = "true" ]; then
-          echo DOCKER_IMAGE=ghcr.io/littlehorse-enterprises/${{ inputs.image-name }} >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_GITHUB=ghcr.io/littlehorse-enterprises/${{ inputs.image-name }}" >> $GITHUB_ENV
         else
-        echo DOCKER_IMAGE=ghcr.io/${{ github.repository }}/${{ inputs.image-name }} >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_GITHUB=ghcr.io/${{ github.repository }}/${{ inputs.image-name }}" >> $GITHUB_ENV
         fi
 
-    - name: Set DOCKER_IMAGE to ecr
-      if: ${{ inputs.registry == 'ecr' }}
+    - name: Set DOCKER_IMAGE for ecr
+      if: ${{ contains(inputs.registry, 'ecr') }}
       shell: bash
       run: |
-        echo DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ inputs.image-name }} >> $GITHUB_ENV
+        echo "DOCKER_IMAGE_ECR=${{ steps.login-ecr.outputs.registry }}/${{ inputs.image-name }}" >> $GITHUB_ENV
 
-    - name: Set DOCKER_IMAGE to quay
-      if: ${{ inputs.registry == 'quay'}}
+    - name: Set DOCKER_IMAGE for quay
+      if: ${{ contains(inputs.registry, 'quay') }}
       shell: bash
       run: |
-        echo DOCKER_IMAGE=quay.io/littlehorse/${{ inputs.image-name }} >> $GITHUB_ENV
+        echo "DOCKER_IMAGE_QUAY=quay.io/littlehorse/${{ inputs.image-name }}" >> $GITHUB_ENV
 
     - name: Extract metadata (tags, labels) for Docker
-      uses: docker/metadata-action@v5
+      uses: docker/metadata-action@v6
       id: meta
       with:
         images: |
-          ${{ env.DOCKER_IMAGE }}
+          ${{ env.DOCKER_IMAGE_GITHUB }}
+          ${{ env.DOCKER_IMAGE_ECR }}
+          ${{ env.DOCKER_IMAGE_QUAY }}
         flavor: |
           prefix=${{ inputs.prefix }}
         tags: ${{ inputs.tags }}
 
     - name: Build and push Docker images
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.dockerfile }}
