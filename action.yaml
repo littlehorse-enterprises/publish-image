@@ -139,7 +139,9 @@ runs:
         tags: ${{ inputs.tags }}
 
     - name: Build and push Docker images
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
+      env:
+        DOCKER_BUILD_SUMMARY: false
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.dockerfile }}
@@ -149,7 +151,15 @@ runs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: ${{ inputs.build-args }}
 
-    - name: Annotate image
+    - name: Write published image summary
       shell: bash
       run: |
-        echo "::notice title=Published Docker Image::${{ steps.meta.outputs.tags }}"
+        {
+          echo "## Published Docker Image Tags"
+          echo
+          echo "The following tags were pushed:"
+          echo
+          while IFS= read -r tag; do
+            [ -n "$tag" ] && echo "- \`$tag\`"
+          done <<< "${{ steps.meta.outputs.tags }}"
+        } >> "$GITHUB_STEP_SUMMARY"
