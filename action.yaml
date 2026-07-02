@@ -37,6 +37,9 @@ inputs:
   ghcr-root:
     description: "Either if use repo root or image name for images hosted in ghcr.io"
     default: "false"
+  push:
+    description: "Whether to push the built image to the registry"
+    default: "true"
 outputs:
   tags:
     description: Tags for the built image
@@ -146,7 +149,7 @@ runs:
         context: ${{ inputs.context }}
         file: ${{ inputs.dockerfile }}
         platforms: ${{ inputs.platforms }}
-        push: true
+        push: ${{ inputs.push }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: ${{ inputs.build-args }}
